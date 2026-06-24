@@ -20,9 +20,9 @@ CADDY_BIND_PORT=8447
 MCP_BASE_PATH=/<random-path>/mcp
 MORGEN_API_KEY=<server-side-only>
 MORGEN_TIMEZONE=America/New_York
-MORGEN_SELF_EMAIL=<bruno email if RSVP needed>
-MORGEN_DEFAULT_ACCOUNT=<logical account fallback>
-MORGEN_ACCOUNT_ROUTES='{"personal":{"domains":["@example.com"],"calendar_patterns":["calendar name or email"]}}'
+MORGEN_SELF_EMAIL=bruno.sousa@marcmansolutions.com
+MORGEN_DEFAULT_ACCOUNT=bruno
+MORGEN_ACCOUNT_ROUTES='{"bruno":{"calendar_patterns":["Bruno"]},"work":{"domains":["@marcmansolutions.com"],"calendar_patterns":["bruno.sousa@marcmansolutions.com"]},"epik":{"calendar_patterns":["2Epik"]},"family":{"calendar_patterns":["Family"]}}'
 ```
 
 ## Deployment sequence
@@ -50,6 +50,6 @@ nginx -t && systemctl reload nginx
 ## Current blockers
 
 - Bruno must supply/approve the Morgen API key lane.
-- Bruno must supply the actual account/calendar routing map.
 - Bruno must approve hostname/path/token choices.
+- Synapse currently cannot reach `5.161.223.126:22` from this runtime (`Connection timed out`). Deployment needs an SSH path to `gala-2`, an approved helper lane, or a human/agent already on that VPS to run the prepared `/opt/morgen-mcp` compose bundle.
 - If this must be a Claude custom connector, add the OAuth/DCR layer used in Plaid before public rollout; `supergateway` alone provides Streamable HTTP transport but not the full Plaid-style OAuth consent flow.
