@@ -1,0 +1,41 @@
+services:
+  morgen-mcp:
+    build:
+      context: ../..
+      dockerfile: deploy/vps/Dockerfile
+    image: morgen-mcp-bridge:0.1.0-local
+    container_name: morgen-mcp
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MCP_PORT: "8080"
+      MCP_BASE_PATH: "${MCP_BASE_PATH:-/mcp}"
+      MCP_SESSION_TIMEOUT_MS: "${MCP_SESSION_TIMEOUT_MS:-60000}"
+      MCP_LOG_LEVEL: "${MCP_LOG_LEVEL:-info}"
+    expose:
+      - "8080"
+    networks: [web]
+
+  caddy:
+    image: caddy:2
+    container_name: morgen-mcp-caddy
+    restart: unless-stopped
+    depends_on:
+      - morgen-mcp
+    ports:
+      - "127.0.0.1:${CADDY_BIND_PORT:-8447}:443"
+    environment:
+      MORGEN_MCP_HOSTNAME: "${MORGEN_MCP_HOSTNAME}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [web]
+
+networks:
+  web:
+
+volumes:
+  caddy_data:
+  caddy_config:
