@@ -7,7 +7,7 @@ services:
     container_name: morgen-mcp
     restart: unless-stopped
     env_file:
-      - .env
+      - ../../.env
     environment:
       MCP_PORT: "8080"
       MCP_BASE_PATH: "${MCP_BASE_PATH:-/mcp}"
