@@ -196,9 +196,9 @@ async function handleCreateEvent(args = {}) {
 
   // Calendar resolution precedence:
   //   1. explicit calendar_id (caller knows exactly which calendar)
-  //   2. explicit account name override (caller says "parzvl" / "bloom")
+  //   2. explicit account route override (caller chooses a configured route)
   //   3. smart routing inferred from title + description + participants
-  //      (catches obvious PARZVL / BLOOM signals, falls back to lorecraft)
+  //      using MORGEN_ACCOUNT_ROUTES
   //   4. default writable calendar (last resort)
   let calendarMeta;
   if (args.calendar_id) {

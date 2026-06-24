@@ -1,12 +1,14 @@
 // MCP tool definitions for Morgen event tools. Pulled into a separate file
 // to keep tools-events.js under the 500-line project limit.
 
+import { getConfiguredAccountNames } from "./calendar-cache.js";
+
 const SERIES_UPDATE_MODES = ["single", "future", "all"];
 const RSVP_RESPONSES = ["accept", "decline", "tentative"];
 const EVENT_PRIVACY = ["public", "private", "secret"];
 const FREE_BUSY_STATUS = ["free", "busy"];
 const VIRTUAL_ROOM_TYPES = ["default", "googleMeet", "microsoftTeams"];
-const ACCOUNT_NAMES = ["lorecraft", "parzvl", "bloom"];
+const ACCOUNT_NAMES = getConfiguredAccountNames();
 
 export const EVENT_TOOLS = [
   {
@@ -55,7 +57,7 @@ export const EVENT_TOOLS = [
   {
     name: "create_event",
     description:
-      "Create a calendar event. If calendar_id is omitted, smart routing picks the right account automatically: obvious PARZVL signals (participants@parzvl.com, 'parzvl'/'beard club' in title/description) route to the PARZVL calendar, obvious BLOOM signals (participants@bloomit.ai, 'bloom'/'bloomit') route to the BLOOM calendar, everything else defaults to nate@lorecraft.io. Pass `account: 'parzvl' | 'bloom' | 'lorecraft'` to override the inference explicitly.",
+      "Create a calendar event. If calendar_id is omitted, smart routing uses MORGEN_ACCOUNT_ROUTES to choose a configured account from participant email domains or title/description keywords, then falls back to MORGEN_DEFAULT_ACCOUNT or the default writable calendar. Pass `account` to force a configured route explicitly.",
     inputSchema: {
       type: "object",
       properties: {
@@ -68,7 +70,7 @@ export const EVENT_TOOLS = [
           type: "string",
           enum: ACCOUNT_NAMES,
           description:
-            "Force the event onto a specific connected account (overrides smart routing). One of 'lorecraft', 'parzvl', 'bloom'.",
+            "Force the event onto a specific configured account route (overrides smart routing). Configure names with MORGEN_ACCOUNT_ROUTES.",
         },
         title: { type: "string", description: "Event title" },
         start: {

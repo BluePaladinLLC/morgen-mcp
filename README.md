@@ -253,6 +253,8 @@ It will prompt you for your API key and timezone, then write a `.env` file for y
 ```bash
 MORGEN_API_KEY=your_morgen_api_key_here
 MORGEN_TIMEZONE=America/New_York
+MORGEN_DEFAULT_ACCOUNT=default
+MORGEN_ACCOUNT_ROUTES='{"work":{"domains":["@example.com"],"keywords":["work"],"calendar_patterns":["work@example.com"]}}'
 ```
 
 **Option C — Pass them as environment variables in your Claude MCP config:**
@@ -265,7 +267,9 @@ MORGEN_TIMEZONE=America/New_York
       "args": ["-y", "fidgetcoding-morgen-mcp"],
       "env": {
         "MORGEN_API_KEY": "your_morgen_api_key_here",
-        "MORGEN_TIMEZONE": "America/New_York"
+        "MORGEN_TIMEZONE": "America/New_York",
+        "MORGEN_DEFAULT_ACCOUNT": "default",
+        "MORGEN_ACCOUNT_ROUTES": "{\"work\":{\"domains\":[\"@example.com\"],\"keywords\":[\"work\"],\"calendar_patterns\":[\"work@example.com\"]}}"
       }
     }
   }
@@ -285,6 +289,8 @@ That is the whole setup. No token refresh cycles, no IndexedDB spelunking.
 | `MORGEN_API_KEY` | Yes | Your Morgen API key from [platform.morgen.so/developers-api](https://platform.morgen.so/developers-api) |
 | `MORGEN_TIMEZONE` | No | IANA timezone for calendar operations (default: `America/New_York`). Used for formatting event times and task due dates. |
 | `MORGEN_SELF_EMAIL` | No | Your own email address — used by `rsvp_event` to key your RSVP into the participants map. Only needed if it can't be inferred from the calendar name (most Google calendars are named after the account email). |
+| `MORGEN_DEFAULT_ACCOUNT` | No | Logical account name to use when smart routing finds no match (default: `default`). |
+| `MORGEN_ACCOUNT_ROUTES` | No | JSON object keyed by logical account name. Each route may include `domains`, `keywords`, `calendar_patterns`, and/or `calendar_id` for env-configured account routing. |
 
 <p align="right"><a href="#top">↑ back to top</a></p>
 
