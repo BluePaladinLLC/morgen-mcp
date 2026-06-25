@@ -47,9 +47,10 @@ nginx -t && systemctl reload nginx
 # remove DNS record if created
 ```
 
-## Current blockers
+## Deployment receipt
 
-- Bruno must approve hostname/path/token choices, or accept generated defaults.
-- Public DNS still needs a DNS-only A record for the chosen hostname to `5.161.223.126`; this Synapse lane does not currently expose Cloudflare/DNS credentials.
-- Direct SSH from Synapse may require the Pons jump path (`10.1.1.120`) to reach `gala-2`; use the Agent Vault `main-ssh-breakglass` key and avoid printing key material.
-- If this must be a Claude custom connector, add the OAuth/DCR layer used in Plaid before public rollout; `supergateway` alone provides Streamable HTTP transport but not the full Plaid-style OAuth consent flow.
+Current deployed receipt: `deploy/vps/deploy-receipt-20260625T0318Z.md`.
+
+- DNS is live: `morgen-mcp-234bcb06c796c734.bluepaladin.ai -> 5.161.223.126`.
+- TLS is live on the loopback Caddy hop; nginx stream SNI relay is restored to Anthropic-gated posture.
+- If this must be a Claude custom connector with OAuth/DCR consent UX, add the OAuth/DCR layer used in Plaid before broader rollout; `supergateway` provides Streamable HTTP transport but not the full Plaid-style OAuth consent flow.
