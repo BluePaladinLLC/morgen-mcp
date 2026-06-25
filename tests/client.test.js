@@ -3,7 +3,7 @@ import { morgenFetch, _resetRateLimiter, MORGEN_BASE } from "../src/client.js";
 
 const API_KEY = "test-key-12345";
 
-function makeResponse({ ok = true, status = 200, body = {}, contentLength } = {}) {
+function makeResponse({ ok = true, status = 200, body = {}, contentLength, text } = {}) {
   const headers = new Map();
   if (contentLength !== undefined) {
     headers.set("content-length", String(contentLength));
@@ -15,6 +15,7 @@ function makeResponse({ ok = true, status = 200, body = {}, contentLength } = {}
       get: (name) => headers.get(String(name).toLowerCase()) ?? null,
     },
     json: vi.fn().mockResolvedValue(body),
+    text: vi.fn().mockResolvedValue(text ?? JSON.stringify(body)),
   };
 }
 
@@ -113,6 +114,21 @@ describe("morgenFetch", () => {
       expect(caught).toBeDefined();
       expect(caught.message).not.toContain(API_KEY);
     });
+
+    it("includes sanitized upstream error details for HTTP 400 responses", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        makeResponse({
+          ok: false,
+          status: 400,
+          body: { message: "duration must be a string", errorRef: "abc123" },
+        })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        morgenFetch("/v3/events/create", { method: "POST", body: {}, points: 1 })
+      ).rejects.toThrow(/duration must be a string/);
+    });
   });
 
   describe("retry behavior", () => {
@@ -133,6 +149,26 @@ describe("morgenFetch", () => {
       const result = await promise;
       expect(result).toEqual({ ok: true });
       expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it("retries on HTTP 502 and succeeds on the second attempt", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(makeResponse({ ok: false, status: 502 }))
+        .mockResolvedValueOnce(makeResponse({ ok: true, status: 200, body: { ok: true } }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const promise = morgenFetch("/v3/events/create", {
+        method: "POST",
+        body: { title: "x" },
+        points: 1,
+      });
+
+      await flushRetryBackoff(1);
+
+      const result = await promise;
+      expect(result).toEqual({ ok: true });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
     it("throws after exhausting retries on HTTP 503", async () => {

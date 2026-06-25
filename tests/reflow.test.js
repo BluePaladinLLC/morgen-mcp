@@ -137,7 +137,7 @@ describe("validateReflowDate", () => {
 });
 
 describe("isSoloBlock", () => {
-  const self = "nate@lorecraft.io";
+  const self = "self@example.com";
 
   it("true when caller is the only participant", () => {
     const event = {
@@ -155,7 +155,7 @@ describe("isSoloBlock", () => {
   it("false with one external participant", () => {
     const event = {
       organizer: self,
-      participants: [{ email: self }, { email: "dan@bloomit.ai" }],
+      participants: [{ email: self }, { email: "external@example.com" }],
     };
     expect(isSoloBlock(event, self)).toBe(false);
   });
@@ -168,8 +168,8 @@ describe("isSoloBlock", () => {
   });
   it("case-insensitive email match", () => {
     const event = {
-      organizer: "NATE@lorecraft.io",
-      participants: [{ email: "Nate@LoreCraft.IO" }],
+      organizer: "SELF@example.com",
+      participants: [{ email: "Self@Example.COM" }],
     };
     expect(isSoloBlock(event, self)).toBe(true);
   });
@@ -233,7 +233,7 @@ describe("compressSchedule", () => {
     expect(plan[0].new_end).toBe("2026-04-14T10:00:00");
   });
 
-  it("reproduces Nate's schedule exactly: LLC→Karpathy→CLI-MAXXING→n8n from 13:00", () => {
+  it("reproduces an already-tight schedule from 13:00", () => {
     const events = [
       { id: "llc",      title: "LLC rename",      start: "2026-04-14T13:00:00", duration: "PT15M" },
       { id: "karpathy", title: "Karpathy update", start: "2026-04-14T13:15:00", duration: "PT45M" },

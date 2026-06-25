@@ -288,7 +288,8 @@ describe("security: request method coercion", () => {
       __method: "../GET",
     });
 
-    const call = spy.mock.calls[0];
+    const call = spy.mock.calls.find(([url]) => String(url).includes("/v3/events/create"));
+    expect(call).toBeDefined();
     const actualMethod = (call[1] && call[1].method) || "GET";
     expect(actualMethod).toBe("POST");
     expect(actualMethod).not.toBe("CONNECT");
