@@ -73,12 +73,20 @@ async function withRetry(fn, maxAttempts = 3) {
       return await fn();
     } catch (err) {
       lastError = err;
+      const status = Number(err?.status || 0);
+      const message = String(err?.message || "");
       const isRetryable =
+        [429, 502, 503, 504].includes(status) ||
         err.name === "AbortError" ||
-        (err.message && (
-          err.message.includes("HTTP 429") ||
-          err.message.includes("HTTP 503") ||
-          err.message.includes("fetch failed")
+        (message && (
+          message.includes("HTTP 429") ||
+          message.includes("HTTP 502") ||
+          message.includes("HTTP 503") ||
+          message.includes("HTTP 504") ||
+          message.includes("fetch failed") ||
+          message.includes("socket") ||
+          message.includes("ECONNRESET") ||
+          message.includes("terminated")
         ));
       if (!isRetryable || attempt === maxAttempts) throw err;
       await new Promise((r) => setTimeout(r, 1_000 * attempt));
@@ -106,6 +114,31 @@ function scrubKey(message) {
   return scrubbed;
 }
 
+async function readErrorBody(res) {
+  try {
+    if (typeof res.text === "function") return await res.text();
+  } catch {}
+  try {
+    if (typeof res.json === "function") return JSON.stringify(await res.json());
+  } catch {}
+  return "";
+}
+
+function summarizeErrorBody(bodyText) {
+  if (!bodyText) return "";
+  let parsed;
+  try {
+    parsed = JSON.parse(bodyText);
+  } catch {
+    return bodyText;
+  }
+  if (typeof parsed === "string") return parsed;
+  if (parsed?.message) return String(parsed.message);
+  if (parsed?.error_description) return String(parsed.error_description);
+  if (parsed?.error) return typeof parsed.error === "string" ? parsed.error : JSON.stringify(parsed.error);
+  return JSON.stringify(parsed);
+}
+
 export async function morgenFetch(path, { method = "GET", body, points = 1 } = {}) {
   enforceRateLimit(points);
 
@@ -122,9 +155,14 @@ export async function morgenFetch(path, { method = "GET", body, points = 1 } = {
       const res = await fetchWithTimeout(`${MORGEN_BASE}${path}`, init);
 
       if (!res.ok) {
-        throw new Error(
-          `Morgen API error (HTTP ${res.status}). The request to ${path} was not successful.`
+        const bodyText = await readErrorBody(res);
+        const detail = summarizeErrorBody(bodyText);
+        const err = new Error(
+          `Morgen API error (HTTP ${res.status}) on ${path}` +
+            (detail ? `: ${detail}` : ". The request was not successful.")
         );
+        err.status = res.status;
+        throw err;
       }
 
       if (
@@ -139,6 +177,8 @@ export async function morgenFetch(path, { method = "GET", body, points = 1 } = {
     });
   } catch (err) {
     const safe = scrubKey(err instanceof Error ? err.message : String(err));
-    throw new Error(safe || "Morgen API call failed");
+    const out = new Error((safe || "Morgen API call failed").slice(0, 1200));
+    if (err?.status) out.status = err.status;
+    throw out;
   }
 }

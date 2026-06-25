@@ -90,7 +90,8 @@ describe("security: XSS payloads", () => {
     expect(result.success).toBe(true);
     expect(spy).toHaveBeenCalled();
     // Confirm the payload was passed through as plain text (not stripped or escaped by us).
-    const call = spy.mock.calls[0];
+    const call = spy.mock.calls.find(([url]) => String(url).includes("/v3/events/create"));
+    expect(call).toBeDefined();
     const bodyStr = call[1].body;
     expect(bodyStr).toContain("<script>");
   });
@@ -211,7 +212,8 @@ describe("security: header injection via args", () => {
     });
 
     expect(spy).toHaveBeenCalled();
-    const call = spy.mock.calls[0];
+    const call = spy.mock.calls.find(([url]) => String(url).includes("/v3/events/create"));
+    expect(call).toBeDefined();
     const init = call[1];
 
     // Headers are an object literal constructed inside morgenHeaders() — the

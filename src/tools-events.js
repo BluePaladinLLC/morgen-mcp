@@ -119,6 +119,29 @@ async function fetchEventsForAccount(accountId, calendarIds, start, end) {
   return unwrapEvents(data);
 }
 
+function normalizeDateTimeForCompare(value) {
+  return String(value || "")
+    .replace(/\.\d{3}/, "")
+    .replace(/Z$/, "")
+    .replace(/([+-]\d{2}:\d{2})$/, "");
+}
+
+async function findExistingCreateMatch({ calendarMeta, title, start, end, localStart }) {
+  const events = await fetchEventsForAccount(
+    calendarMeta.accountId,
+    [calendarMeta.id],
+    start,
+    end
+  );
+  const match = events.find((event) => {
+    const eventCalendarId = event.calendarId || event.calendar_id;
+    return eventCalendarId === calendarMeta.id &&
+      event.title === title &&
+      normalizeDateTimeForCompare(event.start) === normalizeDateTimeForCompare(localStart);
+  });
+  return match ? mapEvent(match) : null;
+}
+
 async function handleListEvents(args = {}) {
   const rangeTz = args.timezone || DEFAULT_TIMEZONE;
   if (args.start !== undefined) args.start = resolveDateTimeInput(args.start, rangeTz);
@@ -256,11 +279,49 @@ async function handleCreateEvent(args = {}) {
     body.alerts = args.alerts;
   }
 
-  const data = await morgenFetch("/v3/events/create", {
-    method: "POST",
-    body,
-    points: 1,
+  const existing = await findExistingCreateMatch({
+    calendarMeta,
+    title: args.title,
+    start: args.start,
+    end: args.end,
+    localStart,
   });
+  if (existing) {
+    return {
+      success: true,
+      event: existing,
+      routedTo: calendarMeta.name,
+      duplicateGuard: true,
+    };
+  }
+
+  let data;
+  try {
+    data = await morgenFetch("/v3/events/create", {
+      method: "POST",
+      body,
+      points: 1,
+    });
+  } catch (err) {
+    const recovered = await findExistingCreateMatch({
+      calendarMeta,
+      title: args.title,
+      start: args.start,
+      end: args.end,
+      localStart,
+    });
+    if (recovered) {
+      return {
+        success: true,
+        event: recovered,
+        routedTo: calendarMeta.name,
+        duplicateGuard: true,
+        recoveredAfterCreateError: true,
+        warning: "Create reported an error, but a matching event now exists; returning it instead of retrying blindly.",
+      };
+    }
+    throw err;
+  }
 
   return { success: true, event: mapEvent(unwrapEvent(data)), routedTo: calendarMeta.name };
 }

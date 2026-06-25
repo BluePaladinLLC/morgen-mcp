@@ -12,4 +12,4 @@ COPY --chown=node:node src ./src
 USER node
 EXPOSE 8080
 
-CMD ["sh", "-lc", "supergateway --stdio 'node /app/src/index.js' --outputTransport streamableHttp --stateful --sessionTimeout ${MCP_SESSION_TIMEOUT_MS:-60000} --port ${MCP_PORT:-8080} --streamableHttpPath ${MCP_BASE_PATH:-/mcp} --healthEndpoint /healthz --logLevel ${MCP_LOG_LEVEL:-info}"]
+CMD ["node", "/app/src/remote-oauth-bridge.js"]

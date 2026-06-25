@@ -10,9 +10,11 @@ services:
       - ../../.env
     environment:
       MCP_PORT: "8080"
+      MCP_UPSTREAM_PORT: "8090"
       MCP_BASE_PATH: "${MCP_BASE_PATH:-/mcp}"
+      MCP_PUBLIC_BASE_URL: "https://${MORGEN_MCP_HOSTNAME}"
       MCP_SESSION_TIMEOUT_MS: "${MCP_SESSION_TIMEOUT_MS:-60000}"
-      MCP_LOG_LEVEL: "${MCP_LOG_LEVEL:-info}"
+      MCP_LOG_LEVEL: "${MCP_LOG_LEVEL:-none}"
     expose:
       - "8080"
     networks: [web]
