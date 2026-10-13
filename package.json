@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/fidgetcoding/morgen-mcp#readme",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.31.0",
     "chrono-node": "^2.9.0",
     "dotenv": "17.4.2"
   },
